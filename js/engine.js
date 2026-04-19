@@ -18,11 +18,46 @@ const GameEngine = (() => {
     sessionStats: { correct: 0, total: 0, startTime: null }
   };
 
+  function cloneDefaultState() {
+    if (typeof structuredClone === 'function') {
+      return structuredClone(DEFAULT_STATE);
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+
   function loadState() {
     try {
       const saved = localStorage.getItem('gcsequest_state');
-      return saved ? { ...DEFAULT_STATE, ...JSON.parse(saved) } : { ...DEFAULT_STATE };
-    } catch { return { ...DEFAULT_STATE }; }
+      if (!saved) return cloneDefaultState();
+
+      const parsed = JSON.parse(saved);
+      const base = cloneDefaultState();
+      const merged = { ...base, ...parsed };
+
+      merged.subjectProgress = { ...base.subjectProgress };
+      Object.keys(base.subjectProgress).forEach(subject => {
+        const parsedSubject = parsed.subjectProgress?.[subject] || {};
+        merged.subjectProgress[subject] = {
+          ...base.subjectProgress[subject],
+          ...parsedSubject,
+          completedLevels: Array.isArray(parsedSubject.completedLevels)
+            ? parsedSubject.completedLevels
+            : []
+        };
+      });
+
+      merged.badges = Array.isArray(parsed.badges) ? parsed.badges : [];
+      merged.answeredQuestions =
+        parsed.answeredQuestions && typeof parsed.answeredQuestions === 'object'
+          ? parsed.answeredQuestions
+          : {};
+      merged.sessionStats = {
+        ...base.sessionStats,
+        ...(parsed.sessionStats || {})
+      };
+
+      return merged;
+    } catch { return cloneDefaultState(); }
   }
 
   function saveState(state) {
@@ -31,7 +66,7 @@ const GameEngine = (() => {
 
   function resetState() {
     localStorage.removeItem('gcsequest_state');
-    return { ...DEFAULT_STATE };
+    return cloneDefaultState();
   }
 
   function getXPForQuestion(marks, correct) {

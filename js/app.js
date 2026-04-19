@@ -16,6 +16,11 @@ const $ = id => document.getElementById(id);
 const show = id => $(`screen-${id}`).classList.add('active');
 const hide = id => $(`screen-${id}`).classList.remove('active');
 const hideAll = () => document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+const escapeHTML = text => {
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
+};
 
 // ── NAVIGATION ──
 function goHome() {
@@ -156,7 +161,7 @@ function renderMCQ(q) {
   q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.innerHTML = `<span class="option-letter">${escapeHTML(letters[i])}</span><span>${escapeHTML(opt)}</span>`;
     btn.onclick = () => selectMCQ(opt, q);
     container.appendChild(btn);
   });
@@ -207,7 +212,7 @@ function showModelAnswer(q, userAnswer) {
     <div class="feedback-text">Compare your response to the model answer below. Be honest with yourself!</div>
     <div class="model-answer">
       <div class="model-answer-title">Model Answer / Key Points</div>
-      <div class="model-answer-text">${q.answer}</div>
+      <div class="model-answer-text">${escapeHTML(q.answer)}</div>
     </div>
     <div class="self-assess">
       <p>How well did you cover the key points?</p>
@@ -244,17 +249,17 @@ function submitAnswer(correct, q, matchScore) {
     const streakMsg = state.streak >= 3 ? ` 🔥 ${state.streak} streak!` : '';
     fb.innerHTML = `
       <div class="feedback-title">✅ Correct!${streakMsg}</div>
-      <div class="feedback-text">${q.type === 'mcq' ? `The answer is: <strong>${q.answer}</strong>` : `Good — you included key ideas!`}</div>
+      <div class="feedback-text">${q.type === 'mcq' ? `The answer is: <strong>${escapeHTML(q.answer)}</strong>` : `Good — you included key ideas!`}</div>
       ${xpGain > 0 ? `<span class="xp-gain">+${xpGain} XP</span>` : ''}
     `;
   } else {
     state.streak = 0;
     fb.innerHTML = `
       <div class="feedback-title">❌ Not quite</div>
-      <div class="feedback-text">The correct answer is: <strong>${q.answer}</strong></div>
+      <div class="feedback-text">The correct answer is: <strong>${escapeHTML(q.answer)}</strong></div>
       <div class="model-answer" style="margin-top:10px">
         <div class="model-answer-title">Key Points</div>
-        <div class="model-answer-text">${q.answer}</div>
+        <div class="model-answer-text">${escapeHTML(q.answer)}</div>
       </div>
     `;
   }
@@ -271,15 +276,25 @@ function updateStateAfterAnswer(correct, q, xpGain, score) {
   state.subjectProgress[currentSubject].xp += xpGain;
 
   // Check badges
-  const newBadges = GameEngine.checkBadges(state, {
-    type: correct ? 'correct' : 'answer',
+  const answerBadges = GameEngine.checkBadges(state, {
+    type: 'answer',
     marks: q.marks,
     streak: state.streak
   });
-  newBadges.forEach(b => {
-    state.badges.push(b);
-    const badge = BADGES.find(bd => bd.id === b);
-    if (badge) showToast(badge.icon, 'Badge Unlocked!', badge.name);
+  const correctBadges = correct
+    ? GameEngine.checkBadges(state, {
+        type: 'correct',
+        marks: q.marks,
+        streak: state.streak
+      })
+    : [];
+  const uniqueBadges = new Set([...answerBadges, ...correctBadges]);
+  uniqueBadges.forEach(b => {
+    if (!state.badges.includes(b)) {
+      state.badges.push(b);
+      const badge = BADGES.find(bd => bd.id === b);
+      if (badge) showToast(badge.icon, 'Badge Unlocked!', badge.name);
+    }
   });
 
   if (correct) {
