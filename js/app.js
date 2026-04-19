@@ -161,7 +161,7 @@ function renderMCQ(q) {
   q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${escapeHTML(opt)}</span>`;
+    btn.innerHTML = `<span class="option-letter">${escapeHTML(letters[i])}</span><span>${escapeHTML(opt)}</span>`;
     btn.onclick = () => selectMCQ(opt, q);
     container.appendChild(btn);
   });
@@ -288,7 +288,8 @@ function updateStateAfterAnswer(correct, q, xpGain, score) {
         streak: state.streak
       })
     : [];
-  [...answerBadges, ...correctBadges].forEach(b => {
+  const uniqueBadges = new Set([...answerBadges, ...correctBadges]);
+  uniqueBadges.forEach(b => {
     if (!state.badges.includes(b)) {
       state.badges.push(b);
       const badge = BADGES.find(bd => bd.id === b);
