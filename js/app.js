@@ -275,13 +275,18 @@
     feedbackEl.textContent = 'Read the model answer and honestly assess your response below.';
     feedbackEl.className = 'feedback-box partial';
 
-    // { once: true } ensures handlers don't stack when multiple extended questions appear
-    document.querySelectorAll('.sa-btn').forEach(btn => {
-      btn.addEventListener('click', function handler() {
-        btn.removeEventListener('click', handler);
+    // Replace each button with a fresh clone to clear any stacked listeners from prior questions
+    const selfAssessButtons = Array.from(document.querySelectorAll('.sa-btn')).map(btn => {
+      const fresh = btn.cloneNode(true);
+      btn.parentNode.replaceChild(fresh, btn);
+      return fresh;
+    });
+
+    selfAssessButtons.forEach(btn => {
+      btn.addEventListener('click', function () {
         if (selfAssessed) return;
         selfAssessed = true;
-        const score = parseInt(btn.dataset.score);
+        const score = parseInt(btn.dataset.score, 10);
         document.querySelectorAll('.sa-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
 

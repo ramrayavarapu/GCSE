@@ -35,12 +35,27 @@ const Engine = (() => {
     };
   }
 
+  function isPlainObject(v) {
+    return v !== null && typeof v === 'object' && !Array.isArray(v);
+  }
+
+  function mergeState(defaults, saved) {
+    if (!isPlainObject(saved)) return defaults;
+    const merged = { ...defaults };
+    Object.keys(saved).forEach(key => {
+      const d = defaults[key], s = saved[key];
+      merged[key] = (isPlainObject(d) && isPlainObject(s)) ? mergeState(d, s) : (s !== undefined ? s : d);
+    });
+    return merged;
+  }
+
   function load() {
+    const defaults = defaultState();
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      state = saved ? JSON.parse(saved) : defaultState();
+      state = mergeState(defaults, saved ? JSON.parse(saved) : null);
     } catch(e) {
-      state = defaultState();
+      state = defaults;
     }
   }
 
