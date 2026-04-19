@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   handoff-to-claude-and-codex:
-    if: contains(github.event.comment.user.login, 'copilot')
+    if: github.event.comment.user.login == 'copilot-pull-request-reviewer[bot]' || github.event.comment.user.login == 'github-copilot[bot]' || github.event.comment.user.login == 'copilot'
     runs-on: ubuntu-latest
     steps:
       - name: Create handoff comment
@@ -24,7 +24,7 @@ jobs:
               '@claude @codex Copilot added a PR review comment that needs follow-up.',
               '',
               `- PR: #${pr.number}`,
-              `- File: \`${comment.path ?? 'n/a'}\``,
+              `- File: ${comment.path ?? 'n/a'}`,
               `- Line: ${comment.line ?? comment.original_line ?? 'n/a'}`,
               `- Copilot comment: ${comment.html_url}`,
             ].join('\n');
