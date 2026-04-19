@@ -19,6 +19,9 @@ const GameEngine = (() => {
   };
 
   function cloneDefaultState() {
+    if (typeof structuredClone === 'function') {
+      return structuredClone(DEFAULT_STATE);
+    }
     return JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
 

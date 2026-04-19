@@ -16,12 +16,11 @@ const $ = id => document.getElementById(id);
 const show = id => $(`screen-${id}`).classList.add('active');
 const hide = id => $(`screen-${id}`).classList.remove('active');
 const hideAll = () => document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-const escapeHTML = text => String(text)
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
+const escapeHTML = text => {
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
+};
 
 // ── NAVIGATION ──
 function goHome() {
