@@ -629,5 +629,305 @@ const BADGES = [
   { id:"level_10", name:"GCSE Ready!", icon:"🏆", desc:"Reach Level 10 in any subject" },
   { id:"five_marker", name:"Five Star Answer", icon:"💫", desc:"Correctly answer a 5-mark question" },
   { id:"speed_demon", name:"Speed Demon", icon:"⚡", desc:"Answer 5 questions in under 2 minutes" },
-  { id:"subject_master", name:"Subject Master", icon:"🧠", desc:"Complete all levels in one subject" }
+  { id:"subject_master", name:"Subject Master", icon:"🧠", desc:"Complete all levels in one subject" },
+  { id:"comeback_kid", name:"Kept Going", icon:"💪", desc:"Answer 10 questions even after getting some wrong" },
+  { id:"careful_thinker", name:"Careful Thinker", icon:"🧐", desc:"Get 3 short-answer questions correct with full working" },
+  { id:"review_star", name:"Review Star", icon:"🔁", desc:"Retry and improve on a previous level" },
+  { id:"brave_writer", name:"Brave Writer", icon:"✍️", desc:"Complete your first extended answer" },
+  { id:"hint_hero", name:"Learning Smart", icon:"🧩", desc:"Use hints to solve 5 questions correctly" }
 ];
+
+const QUESTION_TYPE_WEIGHT = {
+  mcq: 1,
+  short: 2,
+  extended: 3
+};
+
+const QUESTION_STRAND_MAP = {
+  mathematics: {
+    0: "number",
+    1: "decimals",
+    2: "fractions_percentages",
+    3: "algebra",
+    4: "geometry",
+    5: "statistics_probability",
+    6: "linear_graphs",
+    7: "quadratics",
+    8: "trigonometry",
+    9: "simultaneous_inequalities",
+    10: "higher_maths"
+  },
+  english: {
+    0: "reading_basics",
+    1: "language_techniques",
+    2: "structure_form",
+    3: "character_theme",
+    4: "poetry",
+    5: "non_fiction_writing",
+    6: "context_craft",
+    7: "comparison_analysis",
+    8: "media_register",
+    9: "extended_writing",
+    10: "grade9_mastery"
+  },
+  science: {
+    0: "science_basics",
+    1: "cells_biology",
+    2: "atoms_elements",
+    3: "forces_motion",
+    4: "energy_electricity",
+    5: "chemical_reactions",
+    6: "body_systems",
+    7: "waves_light",
+    8: "genetics_evolution",
+    9: "earth_space",
+    10: "advanced_science"
+  },
+  geography: {
+    0: "geography_basics",
+    1: "map_skills",
+    2: "weather_climate",
+    3: "rivers_coasts",
+    4: "population_migration",
+    5: "urban_issues",
+    6: "economic_development",
+    7: "natural_hazards",
+    8: "resources_sustainability",
+    9: "ecosystems_biomes",
+    10: "fieldwork_mastery"
+  }
+};
+
+function getQuestionMetadata(subjectKey, levelKey, question) {
+  const levelNum = Number(levelKey);
+  return {
+    ...question,
+    level: levelNum,
+    subject: subjectKey,
+    strand: QUESTION_STRAND_MAP[subjectKey]?.[levelNum] || `level_${levelNum}`,
+    difficultyScore: levelNum + (QUESTION_TYPE_WEIGHT[question.type] || 1),
+    spacedReviewDays: levelNum <= 2 ? [1, 2, 5] : levelNum <= 6 ? [1, 3, 7] : [2, 5, 10]
+  };
+}
+
+function getAllQuestions(subjectKey) {
+  const subject = QUESTION_BANK[subjectKey];
+  if (!subject) return [];
+  return Object.entries(subject.levels).flatMap(([levelKey, level]) =>
+    level.questions.map((q) => getQuestionMetadata(subjectKey, levelKey, q))
+  );
+}
+
+function getQuestionsForLevel(subjectKey, levelKey) {
+  const subject = QUESTION_BANK[subjectKey];
+  if (!subject || !subject.levels[levelKey]) return [];
+  return subject.levels[levelKey].questions.map((q) => getQuestionMetadata(subjectKey, levelKey, q));
+}
+
+function getWeakestStrands(progress = {}) {
+  const strands = progress.strands || {};
+  return Object.entries(strands)
+    .map(([strand, stats]) => {
+      const attempts = stats.attempts || 0;
+      const correct = stats.correct || 0;
+      const accuracy = attempts ? correct / attempts : 0;
+      return { strand, accuracy, attempts };
+    })
+    .filter((s) => s.attempts > 0)
+    .sort((a, b) => a.accuracy - b.accuracy);
+}
+
+function getCurrentLevel(progress = {}) {
+  return typeof progress.currentLevel === "number" ? progress.currentLevel : 0;
+}
+
+function shouldReviewQuestion(question, progress = {}, now = Date.now()) {
+  const qProgress = progress.questions?.[question.id];
+  if (!qProgress || !qProgress.lastAnsweredAt) return false;
+  const timesSeen = qProgress.attempts || 0;
+  const reviewDays = question.spacedReviewDays || [1, 3, 7];
+  const slot = reviewDays[Math.min(timesSeen - 1, reviewDays.length - 1)] || reviewDays[reviewDays.length - 1];
+  const dueAt = qProgress.lastAnsweredAt + slot * 24 * 60 * 60 * 1000;
+  return now >= dueAt;
+}
+
+function scoreQuestionForSelection(question, progress = {}, options = {}) {
+  const now = options.now || Date.now();
+  const currentLevel = typeof options.currentLevel === "number" ? options.currentLevel : getCurrentLevel(progress);
+  const targetLevel = typeof options.targetLevel === "number" ? options.targetLevel : currentLevel;
+  const weakStrands = options.weakStrands || getWeakestStrands(progress).slice(0, 3).map((s) => s.strand);
+  const qProgress = progress.questions?.[question.id] || {};
+
+  let score = 0;
+
+  const levelDistance = Math.abs(question.level - targetLevel);
+  score += Math.max(0, 8 - levelDistance * 2);
+
+  if (weakStrands.includes(question.strand)) score += 8;
+  if (shouldReviewQuestion(question, progress, now)) score += 10;
+
+  const attempts = qProgress.attempts || 0;
+  const correct = qProgress.correct || 0;
+  const accuracy = attempts ? correct / attempts : null;
+
+  if (attempts === 0) score += 6;
+  if (accuracy !== null && accuracy < 0.6) score += 7;
+  if (accuracy !== null && accuracy >= 0.85) score -= 3;
+
+  if (qProgress.lastResult === false) score += 5;
+  if (qProgress.seenRecently) score -= 4;
+
+  score += Math.random() * 0.5;
+  return score;
+}
+
+function chooseTargetLevel(progress = {}) {
+  const currentLevel = getCurrentLevel(progress);
+  const overallAttempts = progress.overallAttempts || 0;
+  const overallCorrect = progress.overallCorrect || 0;
+  const accuracy = overallAttempts ? overallCorrect / overallAttempts : 0;
+  const streak = progress.correctStreak || 0;
+
+  if (overallAttempts < 5) return currentLevel;
+  if (accuracy >= 0.85 && streak >= 3) return Math.min(10, currentLevel + 1);
+  if (accuracy < 0.5) return Math.max(0, currentLevel - 1);
+  return currentLevel;
+}
+
+function normalizeProgress(progress = {}) {
+  return {
+    currentLevel: typeof progress.currentLevel === "number" ? progress.currentLevel : 0,
+    overallAttempts: progress.overallAttempts || 0,
+    overallCorrect: progress.overallCorrect || 0,
+    correctStreak: progress.correctStreak || 0,
+    questions: progress.questions || {},
+    strands: progress.strands || {}
+  };
+}
+
+function getAdaptiveQuestionSet(subjectKey, progress = {}, config = {}) {
+  const normalized = normalizeProgress(progress);
+  const allQuestions = getAllQuestions(subjectKey);
+  const count = config.count || 8;
+  const targetLevel = typeof config.targetLevel === "number" ? config.targetLevel : chooseTargetLevel(normalized);
+  const weakStrands = getWeakestStrands(normalized).slice(0, 3).map((s) => s.strand);
+
+  const ranked = allQuestions
+    .map((q) => ({
+      question: q,
+      score: scoreQuestionForSelection(q, normalized, {
+        currentLevel: normalized.currentLevel,
+        targetLevel,
+        weakStrands,
+        now: config.now || Date.now()
+      })
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.question);
+
+  return ranked.slice(0, count);
+}
+
+function getRecommendedRevisionSet(subjectKey, progress = {}, config = {}) {
+  const normalized = normalizeProgress(progress);
+  const allQuestions = getAllQuestions(subjectKey);
+  const now = config.now || Date.now();
+  const due = allQuestions.filter((q) => shouldReviewQuestion(q, normalized, now));
+
+  return due.sort((a, b) => a.level - b.level).slice(0, config.count || 6);
+}
+
+function getWeakAreaSummary(subjectKey, progress = {}) {
+  const weakest = getWeakestStrands(progress);
+  return weakest.slice(0, 5).map((item) => ({
+    subject: subjectKey,
+    strand: item.strand,
+    accuracyPercent: Math.round(item.accuracy * 100),
+    attempts: item.attempts
+  }));
+}
+
+function updateProgressAfterAnswer(progress = {}, question, isCorrect) {
+  const normalized = normalizeProgress(progress);
+  const questionMeta = question.level !== undefined ? question : getQuestionMetadata(question.subject, question.level, question);
+  const questions = { ...normalized.questions };
+  const strands = { ...normalized.strands };
+
+  const previousQuestion = questions[questionMeta.id] || { attempts: 0, correct: 0 };
+  questions[questionMeta.id] = {
+    ...previousQuestion,
+    attempts: previousQuestion.attempts + 1,
+    correct: previousQuestion.correct + (isCorrect ? 1 : 0),
+    lastResult: !!isCorrect,
+    lastAnsweredAt: Date.now(),
+    seenRecently: true
+  };
+
+  const previousStrand = strands[questionMeta.strand] || { attempts: 0, correct: 0 };
+  strands[questionMeta.strand] = {
+    attempts: previousStrand.attempts + 1,
+    correct: previousStrand.correct + (isCorrect ? 1 : 0)
+  };
+
+  const overallAttempts = normalized.overallAttempts + 1;
+  const overallCorrect = normalized.overallCorrect + (isCorrect ? 1 : 0);
+  const correctStreak = isCorrect ? normalized.correctStreak + 1 : 0;
+
+  let currentLevel = normalized.currentLevel;
+  if (correctStreak >= 5 && currentLevel < 10) currentLevel += 1;
+  if (!isCorrect && overallAttempts >= 5) {
+    const overallAccuracy = overallCorrect / overallAttempts;
+    if (overallAccuracy < 0.45 && currentLevel > 0) currentLevel -= 1;
+  }
+
+  return {
+    currentLevel,
+    overallAttempts,
+    overallCorrect,
+    correctStreak,
+    questions,
+    strands
+  };
+}
+
+function getSessionPlan(subjectKey, progress = {}, config = {}) {
+  const adaptive = getAdaptiveQuestionSet(subjectKey, progress, { count: config.adaptiveCount || 6 });
+  const revision = getRecommendedRevisionSet(subjectKey, progress, { count: config.revisionCount || 3 });
+
+  const merged = [];
+  const seen = new Set();
+  for (const q of [...revision, ...adaptive]) {
+    if (!seen.has(q.id)) {
+      seen.add(q.id);
+      merged.push(q);
+    }
+  }
+
+  return {
+    subject: subjectKey,
+    targetLevel: chooseTargetLevel(progress),
+    weakAreas: getWeakAreaSummary(subjectKey, progress),
+    questions: merged.slice(0, config.totalCount || 8)
+  };
+}
+
+const ADAPTIVE_ENGINE = {
+  getAllQuestions,
+  getQuestionsForLevel,
+  getAdaptiveQuestionSet,
+  getRecommendedRevisionSet,
+  getWeakAreaSummary,
+  updateProgressAfterAnswer,
+  getSessionPlan,
+  chooseTargetLevel,
+  shouldReviewQuestion
+};
+
+if (typeof module !== "undefined") {
+  module.exports = {
+    QUESTION_BANK,
+    LEVEL_NAMES,
+    BADGES,
+    ADAPTIVE_ENGINE
+  };
+}
