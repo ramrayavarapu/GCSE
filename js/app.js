@@ -88,11 +88,20 @@ function renderLevelSelect() {
     const completed = prog.completedLevels.includes(i);
     const btn = document.createElement('button');
     btn.className = `level-btn ${unlocked ? 'unlocked' : 'locked'} ${completed ? 'completed' : ''}`;
-    btn.innerHTML = `
-      ${completed ? '<span class="level-star">✅</span>' : ''}
-      <span class="level-num">${i}</span>
-      <span class="level-name">${levelData.name}</span>
-    `;
+    if (completed) {
+      const star = document.createElement('span');
+      star.className = 'level-star';
+      star.textContent = '✅';
+      btn.appendChild(star);
+    }
+    const numEl = document.createElement('span');
+    numEl.className = 'level-num';
+    numEl.textContent = i;
+    const nameEl = document.createElement('span');
+    nameEl.className = 'level-name';
+    nameEl.textContent = levelData.name;
+    btn.appendChild(numEl);
+    btn.appendChild(nameEl);
     if (unlocked) btn.onclick = () => goLevel(i);
     grid.appendChild(btn);
   }
@@ -216,14 +225,16 @@ function showModelAnswer(q, userAnswer) {
     </div>
     <div class="self-assess">
       <p>How well did you cover the key points?</p>
-      <div class="score-btns">
-        <button class="score-btn" onclick="selfScore(0, this)">0 — Missed it</button>
-        <button class="score-btn" onclick="selfScore(1, this)">1-2 — Some points</button>
-        <button class="score-btn" onclick="selfScore(3, this)">3 — Good attempt</button>
-        <button class="score-btn" onclick="selfScore(5, this)">4-5 — Excellent!</button>
-      </div>
+      <div class="score-btns" id="score-btns-container"></div>
     </div>
   `;
+  [[0, '0 — Missed it'], [1, '1-2 — Some points'], [3, '3 — Good attempt'], [5, '4-5 — Excellent!']].forEach(([score, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'score-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => selfScore(score, btn));
+    $('score-btns-container').appendChild(btn);
+  });
 }
 
 function selfScore(score, btn) {
@@ -392,11 +403,18 @@ function renderBadges() {
     const earned = state.badges.includes(b.id);
     const div = document.createElement('div');
     div.className = `badge-item ${earned ? 'earned' : 'locked'}`;
-    div.innerHTML = `
-      <span class="badge-icon">${b.icon}</span>
-      <div class="badge-name">${b.name}</div>
-      <div class="badge-desc">${b.desc}</div>
-    `;
+    const iconEl = document.createElement('span');
+    iconEl.className = 'badge-icon';
+    iconEl.textContent = b.icon;
+    const nameEl = document.createElement('div');
+    nameEl.className = 'badge-name';
+    nameEl.textContent = b.name;
+    const descEl = document.createElement('div');
+    descEl.className = 'badge-desc';
+    descEl.textContent = b.desc;
+    div.appendChild(iconEl);
+    div.appendChild(nameEl);
+    div.appendChild(descEl);
     grid.appendChild(div);
   });
 }
@@ -429,9 +447,15 @@ function resetProgress() {
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
-  // Set up subject card clicks
   document.querySelectorAll('.subject-card').forEach(card => {
     card.addEventListener('click', () => goSubject(card.dataset.subject));
   });
+  document.querySelector('.logo').addEventListener('click', goHome);
+  document.querySelector('.reset-btn').addEventListener('click', resetProgress);
+  $('back-to-home').addEventListener('click', goHome);
+  $('exit-level-btn').addEventListener('click', () => goSubject(currentSubject));
+  $('hint-btn').addEventListener('click', toggleHint);
+  $('submit-btn').addEventListener('click', submitShortAnswer);
+  $('complete-home-btn').addEventListener('click', goHome);
   goHome();
 });
