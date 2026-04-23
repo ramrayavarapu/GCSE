@@ -13,7 +13,6 @@
 
 <div class="app">
 
-  <!-- ── HEADER ── -->
   <header class="header">
     <div class="logo" style="cursor:pointer">🎓 GCSE Quest</div>
     <div class="header-stats">
@@ -23,9 +22,6 @@
     </div>
   </header>
 
-  <!-- ══════════════════════════════════════ -->
-  <!-- SCREEN: HOME                           -->
-  <!-- ══════════════════════════════════════ -->
   <div class="screen" id="screen-home">
     <div class="hero">
       <h1>Level Up Your <span>GCSE Results</span> 🚀</h1>
@@ -39,7 +35,13 @@
       </div>
     </div>
 
-    <!-- Subject Cards -->
+    <section class="dashboard-card" id="analytics-dashboard">
+      <div class="dashboard-title">🌟 My Learning Journey</div>
+      <div class="dashboard-subtitle">Small steps every day become big GCSE wins.</div>
+      <div class="analytics-grid" id="analytics-grid"></div>
+      <div class="weak-topic-list" id="weak-topic-list"></div>
+    </section>
+
     <div class="subjects-grid">
       <div class="subject-card" data-subject="mathematics">
         <span class="subject-icon">📐</span>
@@ -67,29 +69,19 @@
       </div>
     </div>
 
-    <!-- Badges -->
     <div class="badges-section">
       <h3>🏅 Badges</h3>
       <div class="badges-grid" id="badges-grid"></div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════ -->
-  <!-- SCREEN: LEVEL SELECT                   -->
-  <!-- ══════════════════════════════════════ -->
   <div class="screen" id="screen-levels">
     <button class="nav-back" id="back-to-home">← Back to Subjects</button>
-    <div class="section-title">
-      <span id="level-select-icon">📐</span>
-      <span id="level-select-name">Mathematics</span>
-    </div>
+    <div class="section-title"><span id="level-select-icon">📐</span><span id="level-select-name">Mathematics</span></div>
     <div class="section-sub" id="level-select-current">Current Level: 0</div>
     <div class="level-grid" id="level-grid"></div>
   </div>
 
-  <!-- ══════════════════════════════════════ -->
-  <!-- SCREEN: QUESTION                       -->
-  <!-- ══════════════════════════════════════ -->
   <div class="screen" id="screen-question">
     <div class="question-header">
       <button class="nav-back" id="exit-level-btn" style="margin-bottom:0">← Exit Level</button>
@@ -99,93 +91,43 @@
         <span style="font-size:.82rem;color:var(--text-muted)" id="q-level">Level 0</span>
       </div>
     </div>
-
-    <div class="progress-bar">
-      <div class="progress-fill" id="q-progress" style="width:0%"></div>
-    </div>
-
-    <!-- Question Card -->
+    <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
     <div class="question-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
-        <span class="question-type-badge" id="question-type">Multiple Choice</span>
-        <span class="q-counter" id="q-counter">1 / 5</span>
-      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><span class="question-type-badge" id="question-type">Multiple Choice</span><span class="q-counter" id="q-counter">1 / 5</span></div>
       <div class="mark-pill" id="q-mark-pill" style="margin-bottom:12px;display:inline-block">1 Mark</div>
       <div class="question-text" id="question-text">Question text here</div>
-
-      <!-- MCQ Area -->
-      <div id="mcq-area" style="margin-top:20px">
-        <div class="options-grid" id="mcq-options"></div>
-      </div>
-
-      <!-- Short / Extended Area -->
-      <div id="short-area" style="margin-top:16px;display:none">
-        <textarea class="short-answer-area" id="answer-textarea" placeholder="Type your answer here..."></textarea>
-        <button class="hint-btn" id="hint-btn">💡 Show Hint</button>
-        <div class="hint-text" id="hint-text"></div>
-      </div>
+      <div id="mcq-area" style="margin-top:20px"><div class="options-grid" id="mcq-options"></div></div>
+      <div id="short-area" style="margin-top:16px;display:none"><textarea class="short-answer-area" id="answer-textarea" placeholder="Type your answer here..."></textarea><button class="hint-btn" id="hint-btn">💡 Show Hint</button><div class="hint-text" id="hint-text"></div></div>
     </div>
-
-    <!-- Feedback -->
     <div class="feedback-card" id="feedback-card"></div>
-
-    <!-- Action Buttons -->
-    <div class="action-row">
-      <button class="btn btn-primary" id="submit-btn">Submit Answer</button>
-      <button class="btn btn-success" id="next-btn" style="display:none">Next Question →</button>
-    </div>
+    <div class="action-row"><button class="btn btn-primary" id="submit-btn">Submit Answer</button><button class="btn btn-success" id="next-btn" style="display:none">Next Question →</button></div>
   </div>
 
-  <!-- ══════════════════════════════════════ -->
-  <!-- SCREEN: LEVEL COMPLETE                 -->
-  <!-- ══════════════════════════════════════ -->
   <div class="screen" id="screen-complete">
     <div class="level-complete-card">
       <span class="trophy" id="complete-icon">🏆</span>
       <h2 id="complete-title">Level Complete!</h2>
       <p id="complete-subject" style="color:var(--text-muted);margin-bottom:16px"></p>
-
       <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-number" id="complete-correct">0/0</div>
-          <div class="stat-label">Correct</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-number" id="complete-pct">0%</div>
-          <div class="stat-label">Score</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-number" id="complete-xp">+0</div>
-          <div class="stat-label">XP Earned</div>
-        </div>
+        <div class="stat-box"><div class="stat-number" id="complete-correct">0/0</div><div class="stat-label">Correct</div></div>
+        <div class="stat-box"><div class="stat-number" id="complete-pct">0%</div><div class="stat-label">Score</div></div>
+        <div class="stat-box"><div class="stat-number" id="complete-xp">+0</div><div class="stat-label">XP Earned</div></div>
       </div>
-
       <p id="complete-msg" style="color:var(--text-muted);margin-bottom:8px"></p>
       <p id="complete-next-unlock" style="color:var(--success);font-weight:700;font-size:.9rem;margin-bottom:24px"></p>
-
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-ghost" id="complete-retry-btn">🔄 Retry</button>
-        <button class="btn btn-primary" id="complete-next-btn">Next Level →</button>
-        <button class="btn btn-ghost" id="complete-home-btn">🏠 Home</button>
-      </div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-ghost" id="complete-retry-btn">🔄 Retry</button><button class="btn btn-primary" id="complete-next-btn">Next Level →</button><button class="btn btn-ghost" id="complete-home-btn">🏠 Home</button></div>
     </div>
   </div>
 
-</div><!-- end .app -->
-
-<!-- Toast Notification -->
-<div class="toast" id="toast">
-  <span class="toast-icon" id="toast-icon">⭐</span>
-  <div>
-    <div class="toast-title" id="toast-title">Achievement!</div>
-    <div class="toast-msg" id="toast-msg">You did it!</div>
-  </div>
 </div>
 
-<!-- Scripts -->
+<div class="toast" id="toast"><span class="toast-icon" id="toast-icon">⭐</span><div><div class="toast-title" id="toast-title">Achievement!</div><div class="toast-msg" id="toast-msg">You did it!</div></div></div>
+
 <script src="data/questions.js"></script>
+<script src="data/question-bank-extension.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/app.js"></script>
+<script src="js/adaptive-mock.js"></script>
 
 </body>
 </html>
