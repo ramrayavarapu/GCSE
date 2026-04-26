@@ -265,13 +265,16 @@ function submitAnswer(correct, q, matchScore) {
     `;
   } else {
     state.streak = 0;
+    const incorrectBody = q.type === 'mcq'
+      ? `<div class="feedback-text">The correct answer is: <strong>${escapeHTML(q.answer)}</strong></div>`
+      : `<div class="feedback-text">Your answer didn't cover enough key points.</div>
+         <div class="model-answer">
+           <div class="model-answer-title">Key Points</div>
+           <div class="model-answer-text">${escapeHTML(q.answer)}</div>
+         </div>`;
     fb.innerHTML = `
       <div class="feedback-title">❌ Not quite</div>
-      <div class="feedback-text">The correct answer is: <strong>${escapeHTML(q.answer)}</strong></div>
-      <div class="model-answer" style="margin-top:10px">
-        <div class="model-answer-title">Key Points</div>
-        <div class="model-answer-text">${escapeHTML(q.answer)}</div>
-      </div>
+      ${incorrectBody}
     `;
   }
 
@@ -326,9 +329,11 @@ function updateStateAfterAnswer(correct, q, xpGain, score) {
 
 function showNextBtn() {
   const isLast = currentQIndex >= currentQuestions.length - 1;
+  if (isLast) $('q-progress').style.width = '100%';
   $('next-btn').style.display = 'inline-flex';
   $('next-btn').textContent = isLast ? '🏁 Finish Level' : 'Next Question →';
   $('next-btn').onclick = isLast ? finishLevel : nextQuestion;
+  $('feedback-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function nextQuestion() {
@@ -403,6 +408,7 @@ function renderBadges() {
     const earned = state.badges.includes(b.id);
     const div = document.createElement('div');
     div.className = `badge-item ${earned ? 'earned' : 'locked'}`;
+    if (!earned) div.title = b.desc;
     const iconEl = document.createElement('span');
     iconEl.className = 'badge-icon';
     iconEl.textContent = b.icon;
