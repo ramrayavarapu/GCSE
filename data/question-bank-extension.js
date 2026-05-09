@@ -23,7 +23,7 @@
       2: [
         { id:"m2_9", marks:1, type:"mcq", q:"What is 3/5 as a percentage?", options:["30%","35%","60%","75%"], answer:"60%", hint:"Convert fifths to hundredths" },
         { id:"m2_10", marks:3, type:"short", q:"A £48 coat is reduced by 25%. Calculate the new price and show your working.", answer:"£36", keywords:["36","25%","12","discount","new price"], hint:"25% is one quarter" },
-        { id:"m2_11", marks:5, type:"extended", q:"In a club, 2/5 of members are adults. There are 90 members. (a) How many are adults? (b) 30% of the children cycle to the club. How many children cycle? (c) What percentage of all members are children who cycle?", answer:"(a) 36 adults (b) 16.2 children, so about 16 if whole people required (c) 18%", keywords:["36","54","16.2","18%","children"], hint:"Find adults first, then children = total − adults" }
+        { id:"m2_11", marks:5, type:"extended", q:"In a club, 2/5 of members are adults. There are 100 members. (a) How many are adults? (b) 30% of the children cycle to the club. How many children cycle? (c) What percentage of all members are children who cycle?", answer:"(a) 40 adults (b) 18 children (c) 18%", keywords:["40","60","18","18%","children"], hint:"Find adults first, then children = total − adults" }
       ],
       3: [
         { id:"m3_9", marks:1, type:"mcq", q:"Simplify 6x − 2x + 5", options:["4x+5","8x+5","4x","9x"], answer:"4x+5", hint:"Collect only like terms" },
